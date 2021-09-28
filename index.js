@@ -19,25 +19,28 @@ function fixDts(opts) {
 				if (lines[lineIndex].startsWith('import')) {
 					importLines.push(lines[lineIndex])
 				} else {
-					otherLines.push(lines[lineIndex])
+					if (lines[lineIndex].trim() !== 'export {};') {
+						otherLines.push(lines[lineIndex])
+					}
 				}
 			}
-
 			for (var importLineIndex = 0; importLineIndex < importLines.length; importLineIndex++) {
 				var current = importLines[importLineIndex].replace('import {', '').replace(';', '').replace('./model/', './').split('} from')
 				var currentPackage = {
-					package: current[1].trim(),
+					package: current[1].replace('"', "'").trim(),
 					imports: current[0].split(',').map(c => c.trim()),
 				}
-				var foundPackage = resolvedImports.find(r => r.package == currentPackage.package)
-				if (!foundPackage) {
-					resolvedImports.push(currentPackage)
-					foundPackage = currentPackage
-				} else {
-					for (var importIndex = 0; importIndex < currentPackage.imports.length; importIndex++) {
-						var foundImport = foundPackage.imports.find(im => im === currentPackage.imports[importIndex])
-						if (!foundImport) {
-							foundPackage.imports.push(currentPackage.imports[importIndex])
+				if (!(currentPackage.package.startsWith("'./"))) {
+					var foundPackage = resolvedImports.find(r => r.package == currentPackage.package)
+					if (!foundPackage) {
+						resolvedImports.push(currentPackage)
+						foundPackage = currentPackage
+					} else {
+						for (var importIndex = 0; importIndex < currentPackage.imports.length; importIndex++) {
+							var foundImport = foundPackage.imports.find(im => im === currentPackage.imports[importIndex])
+							if (!foundImport) {
+								foundPackage.imports.push(currentPackage.imports[importIndex])
+							}
 						}
 					}
 				}
